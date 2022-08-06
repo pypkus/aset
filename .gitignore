@@ -1,0 +1,9 @@
+.ninja*
+*.exe
+*.pdb
+*.ninja
+CMake*
+compile_commands.json
+.vscode
+.cache
+build
