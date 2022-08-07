@@ -6,3 +6,4 @@ ASET is a small project of mine for handling file loading and writing, and manag
 ## TODOs:
 - Multithreading support (non-blocking load functions)
 - Improve callbacks, provide features to measure performance
+- Add a way to report loader and writer errors
