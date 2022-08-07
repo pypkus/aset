@@ -70,10 +70,10 @@ public:
 	void set_error_callback_fn(callback_fn fn);
 	void set_infos_callback_fn(callback_fn fn);
 
+private:
 	void invoke_error_cb(const std::string& message);
 	void invoke_infos_cb(const std::string& message);
 
-private:
 	std::map<TID, loader_fn> m_loaders;
 	std::map<TID, writer_fn> m_writers;
 
