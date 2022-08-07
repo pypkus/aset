@@ -5,5 +5,4 @@ ASET is a small project of mine for handling file loading and writing, and manag
 
 ## TODOs:
 - Multithreading support (non-blocking load functions)
-- Loading assets without defining type by using metas
 - Improve callbacks, provide features to measure performance
