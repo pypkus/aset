@@ -1,3 +1,6 @@
+//#define EXAMPLE1
+#ifdef EXAMPLE1
+
 #include <iostream>
 #include <vector>
 #include "asset_manager.hpp"
@@ -64,3 +67,5 @@ int main() {
 	// Perform test where asset doesn't exist and is requested to unload
 	am.forget_asset("some_nonexistsing_asset.txt");
 }
+
+#endif
