@@ -1,6 +1,5 @@
 #pragma once
 #include <any>
-#include <cstddef>
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -13,11 +12,6 @@
 
 #include "asset_meta.hpp"
 
-// TODO: Multithreading
-// TODO: Allow loading assets only with meta (no type required)
-// TODO: Implement callback system to measure performance of the system
-//	- File loaded
-//	- Data amount loaded
 class asset_manager 
 {
 private:
@@ -41,6 +35,9 @@ public:
 	template <typename T>
 	void set_loader(loader_fn fn);
 
+	template <typename T, typename ExtIterator>
+	void set_loader(loader_fn fn, ExtIterator ext_begin, ExtIterator ext_end);
+
 	template <typename T>
 	void set_writer(writer_fn fn);
 
@@ -62,8 +59,7 @@ public:
 	template <typename T>
 	opt_asset_t load_asset(const std::string& filepath);
 
-	// TODO: Preloads asset using asset_meta. Does not require to specify a type
-	// void load_asset(const asset_meta& asset);
+	void load_asset(const std::string& filepath);
 
 	// Unloads asset. Does not require to specify a type
 	void forget_asset(const std::string& filepath);
@@ -81,6 +77,7 @@ private:
 	std::map<TID, loader_fn> m_loaders;
 	std::map<TID, writer_fn> m_writers;
 
+	std::map<TID, std::vector<std::string>> m_associate_exts;
 	std::unordered_map<std::string, asset_t> m_assets;
 
 	callback_fn m_err_cb, m_infos_cb;
@@ -119,6 +116,26 @@ void asset_manager::set_loader(asset_manager::loader_fn fn)
 	m_loaders[id] = fn;
 }
 
+template <typename T, typename ExtIterator>
+void asset_manager::set_loader(loader_fn fn, ExtIterator begin, ExtIterator end)
+{
+	set_loader<T>(fn);
+
+	if(begin == end)
+	{
+		invoke_error_cb(
+			"provided empty extension list for loader of type \"" + std::string(typeid(T).name()) + "\"");
+	}
+
+	TID id = std::type_index(typeid(T));
+	if(m_associate_exts.find(id) != m_associate_exts.end())
+	{
+		m_associate_exts.erase(id);
+	}
+
+	m_associate_exts[id] = std::vector<std::string>(begin, end);
+}
+
 template<typename T>
 void asset_manager::set_writer(asset_manager::writer_fn fn)
 {
@@ -133,7 +150,7 @@ asset_manager::opt_asset_t asset_manager::load_asset(const std::string& filepath
 	TID id = std::type_index(typeid(T));
 	if(m_loaders.find(id) == m_loaders.end())
 	{
-		invoke_error_cb("loader not found");
+		invoke_error_cb("loader not found for type \"" + std::string(typeid(T).name()) + "\"");
 		return std::nullopt;
 	}
 
@@ -156,6 +173,45 @@ asset_manager::opt_asset_t asset_manager::load_asset(const std::string& filepath
 
 	// Store
 	return m_assets[filepath] = std::move(result);
+}
+
+inline void asset_manager::load_asset(const std::string& filepath)
+{
+	asset_meta metapath = asset_meta::construct_meta_from_filepath(filepath);
+
+	for(const auto& kval : m_associate_exts)
+	{
+		for(const auto& ext : kval.second)
+		{
+			if(ext == metapath.extension)
+			{
+				if(m_loaders.find(kval.first) == m_loaders.end())
+				{
+					invoke_error_cb("loader not found (should exist: associated extension found, report bug)");
+				}
+
+				auto result = m_loaders[kval.first](metapath);
+
+				if(result == nullptr)
+				{
+					invoke_error_cb(
+						"loader of extension \"" + ext + "\" failed to load file \"" + metapath.filepath + "\"");
+				}
+
+				// Asset is being reloaded; replaced.
+				if(m_assets.find(filepath) != m_assets.end())
+				{
+					m_assets.erase(filepath);
+				}
+
+				m_assets[filepath] = std::move(result);
+
+				return;
+			}
+		}
+	}
+
+	invoke_error_cb("couldn't find any associated extension loader for extension \"" + metapath.extension + "\"");
 }
 
 template<typename T>
