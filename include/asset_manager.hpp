@@ -248,5 +248,8 @@ void asset_manager::write_asset(const std::string& filepath, const T& asset)
 
 inline void asset_manager::forget_asset(const std::string& filepath)
 {
-	m_assets.erase(filepath);
+	if(m_assets.find(filepath) != m_assets.end())
+	{
+		m_assets.erase(filepath);
+	}
 }

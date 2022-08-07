@@ -60,4 +60,7 @@ int main() {
 	auto ima_thing2 = am.get_asset<std::string>("my_imaginary_file.cfg");
 
 	std::cout << *ima_thing1 << std::endl << *ima_thing2 << std::endl;
+
+	// Perform test where asset doesn't exist and is requested to unload
+	am.forget_asset("some_nonexistsing_asset.txt");
 }
