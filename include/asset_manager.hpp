@@ -16,7 +16,7 @@ class asset_manager
 {
 private:
 	using TID = std::type_index;
-	using loader_fn = std::function<std::unique_ptr<std::any>(asset_meta)>;
+	using loader_fn = std::function<std::optional<std::unique_ptr<std::any>>(asset_meta)>;
 	using writer_fn = std::function<void(const asset_meta&, const std::any&)>;
 
 public:
@@ -158,7 +158,7 @@ asset_manager::opt_asset_t asset_manager::load_asset(const std::string& filepath
 	asset_meta metapath = asset_meta::construct_meta_from_filepath(filepath);
 	auto result = m_loaders[id](metapath);
 
-	if(result == nullptr)
+	if(result == std::nullopt)
 	{
 		invoke_error_cb(
 			"loader of type \"" + std::string(typeid(T).name()) + "\" failed to load file \"" + metapath.filepath + "\"");
@@ -172,7 +172,7 @@ asset_manager::opt_asset_t asset_manager::load_asset(const std::string& filepath
 	}
 
 	// Store
-	return m_assets[filepath] = std::move(result);
+	return m_assets[filepath] = std::move(result.value());
 }
 
 inline void asset_manager::load_asset(const std::string& filepath)
@@ -192,7 +192,7 @@ inline void asset_manager::load_asset(const std::string& filepath)
 
 				auto result = m_loaders[kval.first](metapath);
 
-				if(result == nullptr)
+				if(result == std::nullopt)
 				{
 					invoke_error_cb(
 						"loader of extension \"" + ext + "\" failed to load file \"" + metapath.filepath + "\"");
@@ -204,7 +204,7 @@ inline void asset_manager::load_asset(const std::string& filepath)
 					m_assets.erase(filepath);
 				}
 
-				m_assets[filepath] = std::move(result);
+				m_assets[filepath] = std::move(result.value());
 
 				return;
 			}

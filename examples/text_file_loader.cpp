@@ -1,11 +1,12 @@
+#include <optional>
 #define EXAMPLE2
 #ifdef EXAMPLE2
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 
 #include "asset_meta.hpp"
-#include <string>
 #include "asset_manager.hpp"
 
 void error_callback(const std::string& message)
@@ -13,9 +14,15 @@ void error_callback(const std::string& message)
 	std::cout << "Asset manager reports error: " << message << ".\n";
 }
 
-std::unique_ptr<std::any> textfile_loader(asset_meta meta)
+std::optional<std::unique_ptr<std::any>> textfile_loader(asset_meta meta)
 {
 	std::ifstream fin(meta.filepath);
+
+	if(!fin)
+	{
+		return {};
+	}
+
 	std::string result(
 		(std::istreambuf_iterator<char>(fin)), 
 		std::istreambuf_iterator<char>());
