@@ -1,6 +1,6 @@
-#include <optional>
 #define EXAMPLE2
 #ifdef EXAMPLE2
+#include <optional>
 #include <iostream>
 #include <fstream>
 #include <vector>

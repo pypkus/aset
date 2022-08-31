@@ -1,4 +1,4 @@
-//#define EXAMPLE1
+#define EXAMPLE1
 #ifdef EXAMPLE1
 
 #include <iostream>
@@ -65,6 +65,7 @@ int main() {
 	std::cout << *ima_thing1 << std::endl << *ima_thing2 << std::endl;
 
 	// Perform test where asset doesn't exist and is requested to unload
+	// Sould call error callback function
 	am.forget_asset("some_nonexistsing_asset.txt");
 }
 
